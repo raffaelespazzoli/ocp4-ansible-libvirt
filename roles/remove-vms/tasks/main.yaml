@@ -1,0 +1,71 @@
+- name: list all VMs
+  virt:
+    command: list_vms
+  register: all_vm
+
+- name: stop bootstrap
+  virt:
+    state: destroyed
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+  when: (item.name~'.'~cluster.compute.vms_domain) in all_vm.list_vms
+
+- name: stop masters
+  virt:
+    state: destroyed
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.masters }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+  
+  
+- name: stop workers
+  virt:
+    state: destroyed
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.workers }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+  
+
+- name: undefine bootstrap
+  virt:
+    command: undefine
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+  
+
+- name: undefine masters
+  virt:
+    command: undefine
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.masters }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+  
+  
+- name: undefine workers
+  virt:
+    command: undefine
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.workers }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+
+- name: remove bootstrap's image
+  file:
+    path: "{{ item.image_file_name }}"
+    state: absent
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+
+- name: remove master's images
+  file:
+    path: "{{ item.image_file_name }}"
+    state: absent
+  with_items: '{{ cluster.compute.masters }}'
+  
+- name: remove worker's images
+  file:
+    path: "{{ item.image_file_name }}"
+    state: absent
+  with_items: '{{ cluster.compute.workers }}'    

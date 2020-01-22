@@ -1,0 +1,3 @@
+ansible_connection: local
+ansible_become: true
+ansible_become_password: "{{ lookup('env','BECOME_PASSWORD') }}"

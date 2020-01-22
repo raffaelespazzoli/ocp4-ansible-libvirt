@@ -1,0 +1,5 @@
+ansible:
+  use_hostnames: true
+  expand_hostvars: true
+  fail_on_errors: true
+

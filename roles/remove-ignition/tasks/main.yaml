@@ -1,0 +1,4 @@
+- name: remove install dir
+  file:
+    path: "{{ workdir.install }}"
+    state: absent

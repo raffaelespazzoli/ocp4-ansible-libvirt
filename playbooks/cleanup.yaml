@@ -1,0 +1,11 @@
+- hosts: localhost
+  roles:
+  - role: remove-vms    
+ 
+- hosts: localhost
+  roles:
+  - role: remove-network
+
+- hosts: localhost
+  roles:
+  - role: remove-ignition  

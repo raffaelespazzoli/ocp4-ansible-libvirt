@@ -1,0 +1,42 @@
+- name: create bootstrap
+  virt:
+    command: define
+    xml: '{{ lookup("template", "vm-template.xml.j2") }}'
+  with_items: 
+  - '{{ cluster.compute.bootstrap }}'
+
+- name: create masters
+  virt:
+    command: define
+    xml: '{{ lookup("template", "vm-template.xml.j2") }}'
+  with_items: '{{ cluster.compute.masters }}'
+  
+- name: create workers
+  virt:
+    command: define
+    xml: '{{ lookup("template", "vm-template.xml.j2") }}'
+  with_items: '{{ cluster.compute.workers }}'
+
+- name: start bootstrap
+  virt:
+    state: running
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+
+- name: start masters
+  virt:
+    state: running
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.masters }}'
+  
+- name: start workers
+  virt:
+    state: running
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.workers }}' 
+  
+- name: Waiting since {{ ansible_date_time.time }} for the bootstrap to complete
+  command: |
+    openshift-install wait-for bootstrap-complete --dir "{{ workdir.install }}"  
+

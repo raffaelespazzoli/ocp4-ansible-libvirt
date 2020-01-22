@@ -1,0 +1,9 @@
+- name: stop network
+  virt_net:
+    state: inactive
+    name: '{{ install_config.metadata.name }}' 
+
+- name: undefine network
+  virt_net:
+    command: undefine
+    name: '{{ install_config.metadata.name }}' 

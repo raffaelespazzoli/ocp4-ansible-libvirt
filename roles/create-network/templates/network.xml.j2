@@ -1,0 +1,41 @@
+<network>
+  <name>{{ install_config.metadata.name }}</name>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='{{ install_config.metadata.name }}' />
+  <mac address='{{ cluster.network.bridge.mac }}'/>
+  <domain name='{{ install_config.baseDomain }}' localOnly='no'/>
+  <dns>
+  {% for item in cluster.compute.masters %}
+    <host ip='{{ item.ip }}' >
+      <hostname >api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname >api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>
+  {% endfor %}
+    <host ip='{{ cluster.compute.bootstrap.ip }}' >
+      <hostname >api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname >api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>    
+  {%for item in cluster.compute.masters %}
+    <host ip='{{ item.ip }}' >
+      <hostname>etcd-{{ loop.index0 }}.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>
+    <srv service='etcd-server-ssl' domain='{{ install_config.metadata.name }}.{{ install_config.baseDomain }}' protocol='tcp' target='etcd-{{ loop.index0 }}.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}.' port='2380' weight='10' priority='0' />
+  {% endfor %}        
+  </dns>
+  <ip address='{{ cluster.network.bridge.default_route }}' netmask='{{ cluster.network.bridge.netmask }}' >
+    <dhcp>
+      <range start='{{ cluster.network.dhcp.min }}' end='{{ cluster.network.dhcp.max }}' />
+      <host mac='{{ cluster.compute.bootstrap.mac }}' ip='{{ cluster.compute.bootstrap.ip }}' name='{{ cluster.compute.bootstrap.name }}.{{ cluster.compute.vms_domain }}' />
+    {% for item in cluster.compute.masters %}
+      <host mac='{{ item.mac }}' ip='{{ item.ip }}' name='{{ item.name }}.{{ cluster.compute.vms_domain }}' />
+    {% endfor %}
+    {% for item in cluster.compute.workers %}
+      <host mac='{{ item.mac }}' ip='{{ item.ip }}' name='{{ item.name }}.{{ cluster.compute.vms_domain }}' />
+    {% endfor %}
+    </dhcp>
+  </ip>
+</network>

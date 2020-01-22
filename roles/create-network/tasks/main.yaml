@@ -1,0 +1,13 @@
+- name: ensure present network
+  virt_net:
+    state: present
+    name: '{{ install_config.metadata.name }}'
+    xml: '{{ lookup("template", "network.xml.j2") }}'
+    autostart: true
+
+- name: start network
+  virt_net:
+    state: active
+    name: '{{ install_config.metadata.name }}'
+    xml: '{{ lookup("template", "network.xml.j2") }}'
+    autostart: true      

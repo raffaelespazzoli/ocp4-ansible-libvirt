@@ -1,0 +1,15 @@
+- hosts: localhost
+  roles:
+  - role: dns-client
+
+- hosts: localhost
+  roles:
+  - role: create-ignition    
+ 
+- hosts: localhost
+  roles:
+  - role: create-network
+  
+- hosts: localhost
+  roles:
+  - role: create-vms  
