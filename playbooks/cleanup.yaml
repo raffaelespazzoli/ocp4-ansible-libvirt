@@ -9,3 +9,7 @@
 - hosts: localhost
   roles:
   - role: remove-ignition  
+
+- hosts: localhost
+  roles:
+  - role: reset-client-dns   

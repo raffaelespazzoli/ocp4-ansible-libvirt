@@ -1,4 +1,8 @@
-<network>
+<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>
+  <dnsmasq:options>
+    <dnsmasq:option value="dns-loop-detect"/>
+    <dnsmasq:option value="domain-needed"/>
+  </dnsmasq:options>
   <name>{{ install_config.metadata.name }}</name>
   <forward mode='nat'>
     <nat>
@@ -7,18 +11,31 @@
   </forward>
   <bridge name='{{ install_config.metadata.name }}' />
   <mac address='{{ cluster.network.bridge.mac }}'/>
-  <domain name='{{ install_config.baseDomain }}' localOnly='no'/>
+  <domain name='{{ install_config.baseDomain }}' localOnly='yes'/>
   <dns>
+    <host ip='{{ cluster.network.lb.apps }}' >
+      <hostname >*.apps.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>  
+  {% if api_dns_with_vip %}}
+    <host ip='{{ cluster.network.lb.api }}' >
+      <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>
+  {% endif %}}
+  {% if api_dns_with_masters %}}
   {% for item in cluster.compute.masters %}
     <host ip='{{ item.ip }}' >
-      <hostname >api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
-      <hostname >api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
     </host>
   {% endfor %}
+  {% endif %}}
+  {% if api_dns_with_bootstrap %}}
     <host ip='{{ cluster.compute.bootstrap.ip }}' >
-      <hostname >api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
-      <hostname >api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
-    </host>    
+      <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+    </host>
+  {% endif %}}      
   {%for item in cluster.compute.masters %}
     <host ip='{{ item.ip }}' >
       <hostname>etcd-{{ loop.index0 }}.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>

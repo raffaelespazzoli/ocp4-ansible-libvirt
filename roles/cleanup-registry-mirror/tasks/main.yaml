@@ -1,0 +1,33 @@
+- name: list all VMs
+  virt:
+    command: list_vms
+  register: all_vm
+
+- name: stop bootstrap
+  virt:
+    state: destroyed
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.registry_mirror }}'
+  when: (item.name~'.'~cluster.compute.vms_domain) in all_vm.list_vms
+
+
+- name: undefine bootstrap
+  virt:
+    command: undefine
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.registry_mirror }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+
+- name: remove bootstrap's image
+  file:
+    path: "{{ item.image_file_name }}"
+    state: absent
+  with_items:
+  - '{{ cluster.compute.registry_mirror }}'
+
+- name: remove registry-mirror dir
+  file:
+    path: "{{ workdir.registry_mirror }}"
+    state: absent  

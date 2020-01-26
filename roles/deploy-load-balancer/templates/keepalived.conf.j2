@@ -1,0 +1,12 @@
+global_defs {
+    router_id master-lb
+}
+vrrp_instance master-lb {
+    interface ens3
+    
+    virtual_router_id 1  
+    
+    virtual_ipaddress {
+      {{ cluster.network.lb.api }}
+    }
+}

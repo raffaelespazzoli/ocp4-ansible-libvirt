@@ -1,0 +1,27 @@
+frontend openshift_api_server
+    bind {{ cluster.network.lb.api }}:6443
+    mode tcp
+    option tcplog
+    default_backend openshift_api_server
+
+backend openshift_api_server
+    balance roundrobin
+    mode tcp
+    option ssl-hello-chk
+{% for item in cluster.compute.masters %}
+    server {{ item.name }} {{ item.ip }}:6443 check
+{% endfor %}
+
+frontend machine_config_server
+    bind {{ cluster.network.lb.api }}:22623
+    mode tcp
+    option tcplog
+    default_backend machine_config_server
+
+backend machine_config_server
+    balance roundrobin
+    mode tcp
+    option ssl-hello-chk
+{% for item in cluster.compute.masters %}
+    server {{ item.name }} {{ item.ip }}:22623 check
+{% endfor %}

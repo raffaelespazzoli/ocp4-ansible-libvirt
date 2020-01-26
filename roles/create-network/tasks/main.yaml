@@ -4,6 +4,10 @@
     name: '{{ install_config.metadata.name }}'
     xml: '{{ lookup("template", "network.xml.j2") }}'
     autostart: true
+  vars:   
+    api_dns_with_bootstrap: true
+    api_dns_with_masters: true
+    api_dns_with_vip: false      
 
 - name: start network
   virt_net:
@@ -11,3 +15,7 @@
     name: '{{ install_config.metadata.name }}'
     xml: '{{ lookup("template", "network.xml.j2") }}'
     autostart: true      
+  vars: 
+    api_dns_with_bootstrap: true
+    api_dns_with_masters: true
+    api_dns_with_vip: false    

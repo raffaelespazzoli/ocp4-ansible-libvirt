@@ -1,3 +1,12 @@
+- name: prepare image for bootstrap
+  include: prepare-image.yaml 
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+
+- name: prepare image for masters
+  include: prepare-image.yaml   
+  with_items: '{{ cluster.compute.masters }}'    
+
 - name: create bootstrap
   virt:
     command: define
@@ -10,12 +19,6 @@
     command: define
     xml: '{{ lookup("template", "vm-template.xml.j2") }}'
   with_items: '{{ cluster.compute.masters }}'
-  
-- name: create workers
-  virt:
-    command: define
-    xml: '{{ lookup("template", "vm-template.xml.j2") }}'
-  with_items: '{{ cluster.compute.workers }}'
 
 - name: start bootstrap
   virt:
@@ -28,15 +31,13 @@
   virt:
     state: running
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
-  with_items: '{{ cluster.compute.masters }}'
+  with_items: '{{ cluster.compute.masters }}' 
   
-- name: start workers
-  virt:
-    state: running
-    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
-  with_items: '{{ cluster.compute.workers }}' 
-  
-- name: Waiting since {{ ansible_date_time.time }} for the bootstrap to complete
+- name: Waiting since {{ ansible_date_time.time }} for the bootstrap to complete. On a laptop it can take much longer, we are going to try for 4 times.
   command: |
-    openshift-install wait-for bootstrap-complete --dir "{{ workdir.install }}"  
+    openshift-install wait-for bootstrap-complete --dir "{{ workdir.install }}" 
+  register: task_result
+  until: task_result.rc == 0
+  retries: 4
+  delay: 60    
 

@@ -1,0 +1,67 @@
+- name: create registry mirror dir
+  file:
+    path: "{{ workdir.registry_mirror }}"
+    state: directory
+    setype: virt_content_t
+
+- name: server private key.
+  openssl_privatekey:
+    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
+    mode: "0644"
+  with_items:
+    - '{{ cluster.compute.registry_mirror }}'      
+
+- name: Generate an OpenSSL CSR.
+  openssl_csr:
+    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.csr"
+    privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
+    common_name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+    - '{{ cluster.compute.registry_mirror }}'  
+
+- name: Generate a Self Signed OpenSSL certificate.
+  openssl_certificate:
+    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.crt"
+    privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
+    csr_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.csr"
+    provider: selfsigned  
+  with_items:
+    - '{{ cluster.compute.registry_mirror }}'      
+
+- name: create htpasswd
+  htpasswd:
+    path: "{{ workdir.registry_mirror }}/htpasswd"
+    name: "{{ mirror.username }}"
+    password: "{{ mirror.username }}"
+
+- name: create pull secret 
+  template:
+    src: pull-secret.json.j2
+    dest: "{{ workdir.registry_mirror }}/{{ mirror.pull_secret_file }}"   
+
+- name: create registry mirror ignition file in yaml
+  template:
+    src: registry-mirror.ign.j2
+    dest: "{{ cluster.compute.registry_mirror.ign_file_name }}.yaml" 
+
+- name: create registry mirror ignition file in json
+  shell: ct -pretty -strict < {{ cluster.compute.registry_mirror.ign_file_name }}.yaml > {{ cluster.compute.registry_mirror.ign_file_name }} 
+
+- name: prepare image for registry mirror
+  include: ../create-vms/tasks/prepare-image.yaml 
+  with_items:
+  - '{{ cluster.compute.registry_mirror }}'
+
+- name: create registry-mirror vm
+  virt:
+    command: define
+    xml: '{{ lookup("template", "../create-vms/templates/vm-template.xml.j2") }}'
+  with_items: 
+  - '{{ cluster.compute.registry_mirror }}'
+
+- name: start registry-mirror vm
+  virt:
+    state: running
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.registry_mirror }}'

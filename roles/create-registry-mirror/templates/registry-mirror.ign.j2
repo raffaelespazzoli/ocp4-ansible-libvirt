@@ -1,0 +1,89 @@
+passwd:
+  users:
+  - name: core
+    ssh_authorized_keys: 
+    - |
+      {{ lookup("file", lookup("env","PUBLIC_SSH_KEY_FILE")) | indent(6) }}
+storage:
+  files:
+  - path: /auth/pull_secret.json
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file',workdir.registry_mirror~'/'~mirror.pull_secret_file) | indent(8) }}  
+  - path: /auth/htpasswd
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file',workdir.registry_mirror~'/htpasswd') | indent(8) }}
+  - path: /opt/registry/domain.crt
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~cluster.compute.vms_domain~'.crt') | indent(8) }}
+  - path: /opt/registry/domain.key
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~cluster.compute.vms_domain~'.key') | indent(8) }}
+  - path: /etc/pki/ca-trust/source/anchors/domain.crt
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~cluster.compute.vms_domain~'.crt') | indent(8) }}
+systemd:
+  units:
+    - name: mirror-registry.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=mirror-registry
+        After=network-online.target
+        Wants=crio.service
+
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=-/bin/podman kill mirror-registry
+        ExecStartPre=-/bin/podman rm mirror-registry
+        ExecStartPre=/bin/podman pull docker.io/library/registry:2
+        ExecStart=/bin/podman run --name mirror-registry -p 5000:5000 -v /opt/registry/data:/var/lib/registry:z -v /opt/registry/auth:/auth:z -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd -v /opt/registry/certs:/certs:z -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key -d docker.io/library/registry:2        
+        # ExecStart=/bin/podman run --name mirror-registry -p 5000:5000 \ 
+        #   -v /opt/registry/data:/var/lib/registry:z \
+        #   -v /opt/registry/auth:/auth:z \
+        #   -e "REGISTRY_AUTH=htpasswd" \
+        #   -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+        #   -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+        #   -v /opt/registry/certs:/certs:z \
+        #   -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+        #   -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+        #   -d docker.io/library/registry:2
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: mirror-job.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=mirror-job
+        After=network-online.target
+        Wants=mirror-registry.service
+
+        [Service]
+        RemainAfterExit=true
+        TimeoutStartSec=0
+        Restart=on-failure
+        Environment=LOCAL_SECRET_JSON=/auth/pull_secret.json
+        Environment=PRODUCT_REPO=openshift-release-dev
+        Environment=RELEASE_NAME=ocp-release
+        Environment=LOCAL_REGISTRY={{ cluster.compute.registry_mirror.name~'.'~cluster.compute.vms_domain }}:5000
+        Environment=LOCAL_REPOSITORY=ocp4/openshift4
+        Environment=OCP_RELEASE={{ cluster.version }}
+        ExecStart=/bin/oc adm -a ${LOCAL_SECRET_JSON} release mirror --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
+
+        [Install]
+        WantedBy=multi-user.target        

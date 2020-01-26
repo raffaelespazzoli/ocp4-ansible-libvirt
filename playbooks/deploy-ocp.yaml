@@ -1,15 +1,27 @@
 - hosts: localhost
   roles:
-  - role: dns-client
+  - role: prerequisites
 
 - hosts: localhost
   roles:
-  - role: create-ignition    
- 
+  - role: configure-client-dns
+
 - hosts: localhost
   roles:
-  - role: create-network
+  - role: create-network  
+
+- hosts: localhost
+  roles:
+  - role: create-ignition
   
 - hosts: localhost
   roles:
-  - role: create-vms  
+  - role: create-vms
+
+- hosts: localhost
+  roles:
+  - role: remove-bootstrap
+
+- hosts: localhost
+  roles:
+  - role: add-workers  

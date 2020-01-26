@@ -1,0 +1,33 @@
+- name: list all VMs
+  virt:
+    command: list_vms
+  register: all_vm
+
+- name: stop bootstrap
+  virt:
+    state: destroyed
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+  when: (item.name~'.'~cluster.compute.vms_domain) in all_vm.list_vms
+
+- name: undefine bootstrap
+  virt:
+    command: undefine
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items:
+  - '{{ cluster.compute.bootstrap }}'
+  when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
+
+- name: remove bootstrap's image
+  file:
+    path: "{{ item.image_file_name }}"
+    state: absent
+  with_items:
+  - '{{ cluster.compute.bootstrap }}' 
+  
+- name: remove bootstrap from loadbalancer
+  command: | 
+    virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command delete --config --live --xml "<host ip='{{ cluster.compute.bootstrap.ip }}' > </host>" 
+  register: result
+  failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'  

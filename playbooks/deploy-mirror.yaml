@@ -1,0 +1,11 @@
+- hosts: localhost
+  roles:
+  - role: prerequisites
+
+- hosts: localhost
+  roles:
+  - role: create-network  
+
+- hosts: localhost
+  roles:
+  - role: create-registry-mirror  

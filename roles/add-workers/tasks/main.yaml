@@ -1,0 +1,15 @@
+- name: prepare image for workers
+  include: ../create-ignition/tasks/prepare-image.yaml   
+  with_items: '{{ cluster.compute.workers }}' 
+
+- name: create workers
+  virt:
+    command: define
+    xml: '{{ lookup("template", "../create-vms/templates/vm-template.xml.j2") }}'
+  with_items: '{{ cluster.compute.workers }}'
+
+- name: start workers
+  virt:
+    state: running
+    name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
+  with_items: '{{ cluster.compute.workers }}'  

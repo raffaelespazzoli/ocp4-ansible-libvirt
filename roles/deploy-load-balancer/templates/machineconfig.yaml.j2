@@ -1,0 +1,27 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 50-masterlb
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,{{ lookup('template',"keepalived.conf.j2") | base64 }}
+        filesystem: root
+        mode: 0644
+        path: /etc/keepalived.d/keepalived.conf
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,{{ lookup('template',"haproxy.cfg.j2") | base64 }}
+        filesystem: root
+        mode: 0644
+        path: /etc/haproxy.d/haproxy.cfg 
+      - contents:
+          source: data:text/plain;charset=utf-8;base64,{{ lookup('template',"keepalived-haproxy-pod.yaml.j2") | base64 }}
+        filesystem: root
+        mode: 0644
+        path: /etc/haproxy.d/keepalived-haproxy-pod.yaml                

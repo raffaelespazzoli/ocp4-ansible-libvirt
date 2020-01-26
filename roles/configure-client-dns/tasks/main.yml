@@ -1,13 +1,13 @@
 - name: Enable dnsmasq in NetworkManager
   template:
-    src: nm.openshift-auto-upi.global.conf
-    dest: /etc/NetworkManager/conf.d
+    src: nm.global.conf
+    dest: /etc/NetworkManager/conf.d/{{ install_config.metadata.name }}-nm.global.conf
   notify: Restart NetworkManager
   become: True
 
 - name: Forward queries against {{ openshift_install_config.cluster_domain }} domain to {{ dns_client.dns_server }}
   template:
-    src: nm.openshift-auto-upi.dnsmasq.conf
-    dest: /etc/NetworkManager/dnsmasq.d
+    src: nm.dnsmasq.conf
+    dest: /etc/NetworkManager/dnsmasq.d/{{ install_config.metadata.name }}-nm.global.conf
   notify: Restart NetworkManager
   become: True
