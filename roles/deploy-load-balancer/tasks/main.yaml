@@ -1,0 +1,90 @@
+# master lb
+
+# - name: create machine config
+#   template: 
+#     src: qemu-machineconfig.yaml.j2
+#     dest: "{{ workdir.install }}/qemu-machineconfig-{{ item }}.yaml"
+#   with_items:
+#     - worker
+#     - master
+
+# - name: verify if machineconfig exists
+#   command: "{{ oc_executable }} get machineconfig 50-{{ item }}-qemu-guest-agent"
+#   register: machineconfig_result.{{ item }}
+#   failed_when: machineconfig_result.{{ item }}.rc!=0 && not contains(machineconfig_result.{{ item }}.stderr,"NotFound")
+#   with_items:
+#     - worker
+#     - master    
+
+# - name: create qemu machine config
+#   command: "{{ oc_executable }} create -f {{ workdir.install }}/qemu-machineconfig-{{ item }}.yaml"
+#   with_items:
+#     - worker
+#     - master
+#   when: machineconfig_result.{{ item }}.rc!=0   
+  
+# - name: replace qemu machine config
+#   command: "{{ oc_executable }} create -f {{ workdir.install }}/qemu-machineconfig-{{ item }}.yaml"
+#   with_items:
+#     - worker
+#     - master
+#   when: machineconfig_result.{{ item }}.rc==0   
+
+- name: create lb machine config
+  template: 
+    src: lb-machineconfig.yaml.j2
+    dest: "{{ workdir.install }}/lb-machineconfig.yaml"
+  
+- name: verify if machineconfig exists
+  command: "{{ oc_executable }} get machineconfig 50-masterlb"
+  register: machineconfig_result
+  failed_when: machineconfig_result.rc!=0 and "NotFound" not in machineconfig_result.stderr
+
+- name: create lb machine config
+  command: "{{ oc_executable }} create -f {{ workdir.install }}/lb-machineconfig.yaml"
+  when: machineconfig_result.rc!=0
+
+- name: replace lb machine config
+  command: "{{ oc_executable }} replace -f {{ workdir.install }}/lb-machineconfig.yaml"
+  when: machineconfig_result.rc==0
+
+
+- name: wait for VIP to come up
+  net_ping:
+    dest: "{{ cluster.network.lb.api }}"
+  register: task_result
+  until: task_result.packets_rx == 5
+  retries: 10
+  delay: 120
+
+- name: add VIP to master api lb
+  command: | 
+    virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command add --config --live \
+    --xml "<host ip='{{ cluster.network.lb.api }}' > <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> \
+    <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> </host>" 
+  register: result
+  #failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'   
+  
+- name: remove masters from master api lb
+  command: | 
+    virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command delete --config --live --xml "<host ip='{{ item.ip }}' > </host>" 
+  register: result
+  failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'
+  with_items: '{{ cluster.compute.masters }}'
+
+ 
+
+
+# router lb
+
+- name: deploy keepalived operator
+  fail:
+    message: not implemented
+
+- name: create operator group
+  fail:
+    message: not implemented
+
+- name: patch router service (openshift-ingress/router-default)
+  fail:
+    message: not implemented

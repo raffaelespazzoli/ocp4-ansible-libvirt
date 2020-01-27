@@ -27,3 +27,7 @@
 
 - name: download installer exec
   meta: noop
+
+- name: set oc executable
+  set_fact:
+    oc_executable: oc --kubeconfig={{ workdir.install }}/auth/kubeconfig  

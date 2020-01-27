@@ -28,3 +28,10 @@ remove cluster
 ```shell
 ansible-playbook -v -i ./inventory ./playbooks/cleanup.yaml
 ```
+
+access the cluster 
+
+```shell
+oc adm certificate approve
+export KUBECONFIG=./install/auth/kubeconfig
+```

@@ -24,4 +24,8 @@
 
 - hosts: localhost
   roles:
-  - role: add-workers  
+  - role: add-workers
+
+- hosts: localhost
+  roles:
+  - role: deploy-load-balancer

@@ -1,5 +1,5 @@
 - name: prepare image for workers
-  include: ../create-ignition/tasks/prepare-image.yaml   
+  include: ../create-vms/tasks/prepare-image.yaml   
   with_items: '{{ cluster.compute.workers }}' 
 
 - name: create workers
@@ -12,4 +12,13 @@
   virt:
     state: running
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
-  with_items: '{{ cluster.compute.workers }}'  
+  with_items: '{{ cluster.compute.workers }}'
+
+- name: approve csrs
+  pause: 
+    prompt: |
+      at this point you need to approve the csr, on a different terminal check if all the csr are present:
+      oc --kubeconfig={{ workdir.install }}/auth/kubeconfig get csr
+      when all the csr are present, run this command:       
+      oc --kubeconfig={{ workdir.install }}/auth/kubeconfig adm certificate approve $(oc --kubeconfig={{ workdir.install }}/auth/kubeconfig get csr -o json | jq '[ .items[] | {name: .metadata.name, node: .spec.username|split(\":\")[-1], status: .status }] | select(.[].status == "").name')  
+    minutes: 10   
