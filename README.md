@@ -1,49 +1,65 @@
+# OCP4 libvirt
 
-Prepare environment variables
+This is an installation method for OCP 4.x designed to install OCP 4.x on personal laptop. The main difference from crc is that with this installation method you get a multinode cluster (your laptop needs to have the necessary resources to support multiple nodes).
 
-qcows releases can be found here: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/ this is a vpn-only link so at least for the first download you need the VPN.
+A major difference from other bare metal approaches is that this approach does not use a helper node. The OCP requirements normally satisfied by the helper node are satisfied as follows:
 
+1. DNS entries: libvirt DNS (which in turn is based on dnsmasq)
+2. DHCP: libvirt network
+3. ignition injection: libvirt qemu extension to inject ignition file (requires RHCOS qemu image, currently available [here](https://releases-rhcos-art.cloud.privileged.psi.redhat.com/) only via the RedHat VPN)
+4. master load balancer: DNS based load balancer
+5. router and other load balancers: keepalived operator
+
+## Installation instructions
+
+### Prepare environment variables
 
 ```shell
-sudo dnf install -y ansible python-libvirt python-lxml python3-passlib
 export BECOME_PASSWORD=<your sudo password>
 export PUBLIC_SSH_KEY_FILE=<your public ssh key>
 export PULL_SECRET_FILE=<your pull secret>
 ```
 
-create mirror:
+### Install ansible requirements
 
 ```shell
-ansible-playbook -v -i ./inventory ./playbooks/deploy-mirror.yaml
+sudo dnf install -y ansible python-libvirt python-lxml python3-passlib
 ```
 
-create cluster
+### Edit your inventory file
+
+you can find an example [here](./inventory)
+
+### Create cluster
 
 ```shell
 ansible-playbook -v -i ./inventory ./playbooks/deploy-ocp.yaml
 ```
 
-remove cluster
+### Approve certificates
+
+at a certain point during the installation the process will stop to allow you to approve certificates.
+you should wait for two certificates for each of the nodes you created.
+The needed commands are the following:
+
+```shell
+export KUBECONFIG=./install/auth/kubeconfig
+oc get csr
+oc adm certificate approve xxx
+```
+
+### Access the cluster
+
+```shell
+export KUBECONFIG=./install/auth/kubeconfig
+```
+
+also you console should be available at:
+
+`https://console-openshift-console.apps.<cluster-name>.<cluster-domain>`
+
+### Remove cluster
 
 ```shell
 ansible-playbook -v -i ./inventory ./playbooks/cleanup.yaml
 ```
-
-access the cluster 
-
-```shell
-oc adm certificate approve
-export KUBECONFIG=./install/auth/kubeconfig
-```
-
-```shell
-oc new-project keepalived-operator
-helm template ~/go/src/github/redhat-cop/keepalived-operator/charts/keepalived-operator ... | oc apply -f 
-oc adm policy add-scc-to-user privileged -z default -n keepalived-operator
-oc apply -f ./keepalived-group.yaml -n keepalived-operator
-export ALLOWED_CIDR="192.168.131.128/26"
-export AUTOASSIGNED_CIDR="192.168.131.192/26"
-oc patch network cluster -p "$(envsubst < ./network-patch.yaml | yq -j .)" --type=merge
-oc apply -f ./service.yaml
-```
-
