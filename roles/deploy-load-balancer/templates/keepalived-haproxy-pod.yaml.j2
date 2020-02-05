@@ -1,51 +1,51 @@
-- apiVersion: v1
-  kind: Pod
-  metadata:
-    name: master-lb
-    namespace: openshift-kube-apiserver
-      spec:
-        hostNetwork: true
-        automountServiceAccountToken: false
-        enableServiceLinks: false
-        containers:
-        - name: keepalived
-          image: "registry.redhat.io/openshift4/ose-keepalived-ipfailover"
-          command:
-          - /usr/sbin/keepalived
-          - -l
-          - -D
-          - -n
-          args:
-          - -f
-          - /etc/keepalived.d/keepalived.conf
-          volumeMounts:
-          - mountPath: /lib/modules
-            name: lib-modules
-            readOnly: true
-          - mountPath: /etc/keepalived.d
-            name: keepalived-config
-            readOnly: true                               
-          securityContext:
-            privileged: true
-        - name: haproxy
-          image: registry.redhat.io/openshift4/ose-haproxy-router
-          command:
-          - /usr/sbin/haproxy
-          - -f
-          - /etc/haproxy.d/haproxy.cfg  
-          volumeMounts:
-          - mountPath: /etc/haproxy.d
-            name: haproxy-config
-            readOnly: true
-          securityContext:
-            privileged: true                                                                                              
-        volumes:
-        - hostPath:
-            path: /lib/modules
-          name: lib-modules
-        - name: keepalived-config
-          hostPath: 
-            path: /etc/keepalive.d  
-        - name: haproxy-config
-          hostPath: 
-            path: /etc/haproxy.d 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: master-lb
+  namespace: openshift-kube-apiserver
+spec:
+  hostNetwork: true
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  containers:
+  - name: keepalived
+    image: "registry.redhat.io/openshift4/ose-keepalived-ipfailover"
+    command:
+    - /usr/sbin/keepalived
+    - -l
+    - -D
+    - -n
+    args:
+    - -f
+    - /etc/keepalived.d/keepalived.conf
+    volumeMounts:
+    - mountPath: /lib/modules
+      name: lib-modules
+      readOnly: true
+    - mountPath: /etc/keepalived.d
+      name: keepalived-config
+      readOnly: true                               
+    securityContext:
+      privileged: true
+  - name: haproxy
+    image: registry.redhat.io/openshift4/ose-haproxy-router
+    command:
+    - /usr/sbin/haproxy
+    - -f
+    - /etc/haproxy.d/haproxy.cfg  
+    volumeMounts:
+    - mountPath: /etc/haproxy.d
+      name: haproxy-config
+      readOnly: true
+    securityContext:
+      privileged: true                                                                                              
+  volumes:
+  - hostPath:
+      path: /lib/modules
+    name: lib-modules
+  - name: keepalived-config
+    hostPath: 
+      path: /etc/keepalived.d  
+  - name: haproxy-config
+    hostPath: 
+      path: /etc/haproxy.d 

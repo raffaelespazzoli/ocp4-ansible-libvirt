@@ -13,17 +13,21 @@
 - name: check if rhcos image exists
   stat:
     path: "{{ workdir.vm_data }}/{{ base_image_name }}"
-  register: result
-
-# - name: download rhcos image
-#   get_url:
-#     url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/latest/rhcos-4.2.0-x86_64-metal-bios.raw.gz
-#     dest: "{{ workdir.vm_data }}"
-#   when: result.stat.exists == false
+  register: result 
 
 - name: download rhcos image
-  command: curl --compressed -J -L -o {{ workdir.vm_data }}/{{ base_image_name }} {{ base_image_url }}
-  when: result.stat.exists == false     
+  shell: curl -Lo {{ workdir.vm_data }}/{{ base_image_name }}.gz {{ base_image_url }}
+  when: result.stat.exists == false  
+
+- name: uncompress rhcos image
+  shell: gunzip {{ workdir.vm_data }}/{{ base_image_name }}.gz
+  when: result.stat.exists == false  
+  
+- name: fix selinux
+  file:
+    path: "{{ workdir.vm_data }}/{{ base_image_name }}"
+    state: file
+    setype: virt_content_t    
 
 - name: download installer exec
   meta: noop

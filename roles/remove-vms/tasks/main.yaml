@@ -2,6 +2,7 @@
   virt:
     command: list_vms
   register: all_vm
+  become: true  
 
 - name: stop bootstrap
   virt:
@@ -10,6 +11,7 @@
   with_items:
   - '{{ cluster.compute.bootstrap }}'
   when: (item.name~'.'~cluster.compute.vms_domain) in all_vm.list_vms
+  become: true
 
 - name: stop masters
   virt:
@@ -17,7 +19,7 @@
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items: '{{ cluster.compute.masters }}'
   when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
-  
+  become: true  
   
 - name: stop workers
   virt:
@@ -25,7 +27,7 @@
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items: '{{ cluster.compute.workers }}'
   when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
-  
+  become: true  
 
 - name: undefine bootstrap
   virt:
@@ -34,7 +36,7 @@
   with_items:
   - '{{ cluster.compute.bootstrap }}'
   when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
-  
+  become: true  
 
 - name: undefine masters
   virt:
@@ -42,7 +44,7 @@
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items: '{{ cluster.compute.masters }}'
   when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
-  
+  become: true  
   
 - name: undefine workers
   virt:
@@ -50,7 +52,8 @@
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items: '{{ cluster.compute.workers }}'
   when: item.name~'.'~cluster.compute.vms_domain in all_vm.list_vms
-
+  become: true
+  
 - name: remove bootstrap's image
   file:
     path: "{{ item.image_file_name }}"

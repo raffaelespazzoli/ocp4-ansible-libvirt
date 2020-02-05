@@ -1,0 +1,7 @@
+spec:
+  externalIP:
+    policy:
+      allowedCIDRs:
+      - ${ALLOWED_CIDR}
+    autoAssignCIDRs:
+      - "${AUTOASSIGNED_CIDR}"      

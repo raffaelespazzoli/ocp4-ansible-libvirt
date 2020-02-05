@@ -3,19 +3,20 @@
     state: present
     name: '{{ install_config.metadata.name }}'
     xml: '{{ lookup("template", "network.xml.j2") }}'
-    autostart: true
   vars:   
     api_dns_with_bootstrap: true
     api_dns_with_masters: true
-    api_dns_with_vip: false      
+    api_dns_with_vip: false
+  become: true
+
+- name: make network autostart at boot 
+  virt_net:
+    name: '{{ install_config.metadata.name }}'
+    autostart: true
+  become: true      
 
 - name: start network
   virt_net:
     state: active
     name: '{{ install_config.metadata.name }}'
-    xml: '{{ lookup("template", "network.xml.j2") }}'
-    autostart: true      
-  vars: 
-    api_dns_with_bootstrap: true
-    api_dns_with_masters: true
-    api_dns_with_vip: false    
+  become: true  

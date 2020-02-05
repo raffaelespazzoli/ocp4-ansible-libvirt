@@ -1,0 +1,22 @@
+- name: prepare install-config
+  template:
+    src: install-config.yaml.j2
+    dest: "{{ workdir.install }}/install-config.yaml"
+
+- name: add pull secret
+  lineinfile:
+    path: "{{ workdir.install }}/install-config.yaml"
+    regexp: '^pullSecret:'
+    line: 'pullSecret: ''{{ lookup("file", lookup("env", "PULL_SECRET_FILE")) }}'''
+    state: present  
+    
+- name: add ssh key
+  lineinfile:
+    path: "{{ workdir.install }}/install-config.yaml"
+    regexp: '^sshKey:'
+    line: 'sshKey: ''{{ lookup("file", lookup("env","PUBLIC_SSH_KEY_FILE")) }}'''
+    state: present     
+
+- name: create manifests
+  command: openshift-install create manifests --dir {{ workdir.install }}
+  become: false

@@ -12,7 +12,15 @@
 
 - hosts: localhost
   roles:
-  - role: create-ignition
+  - role: create-manifests
+
+# - hosts: localhost
+#   roles:
+#   - role: deploy-load-balancer  
+
+- hosts: localhost
+  roles:
+  - role: create-ignition   
   
 - hosts: localhost
   roles:
@@ -26,6 +34,18 @@
   roles:
   - role: add-workers
 
+# - hosts: localhost
+#   roles:
+#   - role: approve cert 
+
 - hosts: localhost
   roles:
   - role: deploy-load-balancer
+ 
+# - hosts: localhost
+#   roles:
+#   - role: wait for install to complete
+
+# - hosts: localhost
+#   roles:
+#   - role: day 2 operation  

@@ -26,12 +26,14 @@
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items:
   - '{{ cluster.compute.bootstrap }}'
+  become: true
 
 - name: start masters
   virt:
     state: running
     name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
   with_items: '{{ cluster.compute.masters }}' 
+  become: true
   
 - name: Waiting since {{ ansible_date_time.time }} for the bootstrap to complete. On a laptop it can take much longer, we are going to try for 4 times.
   command: |

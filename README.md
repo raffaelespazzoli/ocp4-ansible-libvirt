@@ -35,3 +35,15 @@ access the cluster
 oc adm certificate approve
 export KUBECONFIG=./install/auth/kubeconfig
 ```
+
+```shell
+oc new-project keepalived-operator
+helm template ~/go/src/github/redhat-cop/keepalived-operator/charts/keepalived-operator ... | oc apply -f 
+oc adm policy add-scc-to-user privileged -z default -n keepalived-operator
+oc apply -f ./keepalived-group.yaml -n keepalived-operator
+export ALLOWED_CIDR="192.168.131.128/26"
+export AUTOASSIGNED_CIDR="192.168.131.192/26"
+oc patch network cluster -p "$(envsubst < ./network-patch.yaml | yq -j .)" --type=merge
+oc apply -f ./service.yaml
+```
+

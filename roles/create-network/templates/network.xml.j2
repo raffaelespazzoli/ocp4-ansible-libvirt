@@ -2,6 +2,7 @@
   <dnsmasq:options>
     <dnsmasq:option value="dns-loop-detect"/>
     <dnsmasq:option value="domain-needed"/>
+    <dnsmasq:option value="address=/apps.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}/{{ cluster.network.lb.apps }}"/>
   </dnsmasq:options>
   <name>{{ install_config.metadata.name }}</name>
   <forward mode='nat'>
@@ -14,7 +15,7 @@
   <domain name='{{ install_config.baseDomain }}' localOnly='yes'/>
   <dns>
     <host ip='{{ cluster.network.lb.apps }}' >
-      <hostname >*.apps.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
+      <hostname >router.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname>
     </host>  
   {% if api_dns_with_vip %}}
     <host ip='{{ cluster.network.lb.api }}' >

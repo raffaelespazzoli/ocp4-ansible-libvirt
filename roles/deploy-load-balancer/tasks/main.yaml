@@ -30,61 +30,94 @@
 #     - master
 #   when: machineconfig_result.{{ item }}.rc==0   
 
-- name: create lb machine config
-  template: 
-    src: lb-machineconfig.yaml.j2
-    dest: "{{ workdir.install }}/lb-machineconfig.yaml"
+# - name: create lb machine config
+#   template: 
+#     src: lb-machineconfig.yaml.j2
+#     dest: "{{ workdir.install }}/manifests/lb-machineconfig.yaml"
   
-- name: verify if machineconfig exists
-  command: "{{ oc_executable }} get machineconfig 50-masterlb"
-  register: machineconfig_result
-  failed_when: machineconfig_result.rc!=0 and "NotFound" not in machineconfig_result.stderr
+# - name: verify if machineconfig exists
+#   command: "{{ oc_executable }} get machineconfig 50-masterlb"
+#   register: machineconfig_result
+#   failed_when: machineconfig_result.rc!=0 and "NotFound" not in machineconfig_result.stderr
 
-- name: create lb machine config
-  command: "{{ oc_executable }} create -f {{ workdir.install }}/lb-machineconfig.yaml"
-  when: machineconfig_result.rc!=0
+# - name: create lb machine config
+#   command: "{{ oc_executable }} create -f {{ workdir.install }}/lb-machineconfig.yaml"
+#   when: machineconfig_result.rc!=0
 
-- name: replace lb machine config
-  command: "{{ oc_executable }} replace -f {{ workdir.install }}/lb-machineconfig.yaml"
-  when: machineconfig_result.rc==0
+# - name: replace lb machine config
+#   command: "{{ oc_executable }} replace -f {{ workdir.install }}/lb-machineconfig.yaml"
+#   when: machineconfig_result.rc==0
 
 
-- name: wait for VIP to come up
-  net_ping:
-    dest: "{{ cluster.network.lb.api }}"
-  register: task_result
-  until: task_result.packets_rx == 5
-  retries: 10
-  delay: 120
+# - name: wait for VIP to come up
+#   command: ping -c 5 "{{ cluster.network.lb.api }}"
+#   #net_ping:
+#   #  dest: "{{ cluster.network.lb.api }}"
+#   register: task_result
+#   until: task_result.rc == 0
+#   retries: 10
+#   delay: 120
 
-- name: add VIP to master api lb
-  command: | 
-    virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command add --config --live \
-    --xml "<host ip='{{ cluster.network.lb.api }}' > <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> \
-    <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> </host>" 
-  register: result
-  #failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'   
+# - name: remove masters from master api lb
+#   command: | 
+#     virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command delete --config --live --xml "<host ip='{{ item.ip }}' > </host>" 
+#   register: result
+#   failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'
+#   with_items: '{{ cluster.compute.masters }}'  
+
+# - name: add VIP to master api lb
+#   command: | 
+#     virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command add --config --live \
+#     --xml "<host ip='{{ cluster.network.lb.api }}' > <hostname>api.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> \
+#     <hostname>api-int.{{ install_config.metadata.name }}.{{ install_config.baseDomain }}</hostname> </host>" 
+#   register: result
+#   #failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'   
   
-- name: remove masters from master api lb
-  command: | 
-    virsh net-update --network '{{ install_config.metadata.name }}' --section dns-host --command delete --config --live --xml "<host ip='{{ item.ip }}' > </host>" 
-  register: result
-  failed_when: 'result.rc != 0 and "locate a matching DNS HOST record" not in result.stderr'
-  with_items: '{{ cluster.compute.masters }}'
+
 
  
 
 
 # router lb
 
+- name: create project
+  command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-namespace.yaml"
+
 - name: deploy keepalived operator
-  fail:
-    message: not implemented
+  block:
+  - command: helm repo add keepalived-operator https://redhat-cop.github.io/keepalived-operator
+
+  - command: helm repo update
+
+  - shell: helm search repo keepalived-operator/keepalived-operator | grep keepalived-operator/keepalived-operator | awk '{print $2}'
+    register: result
+
+  - command: helm fetch keepalived-operator/keepalived-operator --version {{ result.stdout }}  
+
+  - shell: helm template keepalived-operator-{{ result.stdout }}.tgz --namespace keepalived-operator | {{ oc_executable }} apply -f - -n keepalived-operator
+
+  - file: 
+      path: "keepalived-operator-{{ result.stdout }}.tgz"
+      state: absent
+
+- name: patch ocp network
+  command: "{{ oc_executable }} patch network cluster --type=merge -p '{{ lookup('template','network-patch.yaml.j2') }}'"
 
 - name: create operator group
-  fail:
-    message: not implemented
+  block: 
+  - command: "{{ oc_executable }} adm policy add-scc-to-user privileged -z default -n keepalived-operator"  
+  - command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-group.yaml -n keepalived-operator"
 
-- name: patch router service (openshift-ingress/router-default)
-  fail:
-    message: not implemented
+- name: create router service (openshift-ingress/router-default)
+  shell: |
+    cat << EOF | {{ oc_executable }} apply -f -
+    {{ lookup('template','service.yaml.j2') }}
+    EOF
+
+- name: Waiting since {{ ansible_date_time.time }} for the install to complete. On a laptop it can take much longer, we are going to try for 4 times.
+  command: |
+    openshift-install wait-for install-complete --dir "{{ workdir.install }}" 
+  register: task_result
+  until: task_result.rc == 0
+  retries: 4
+  delay: 60   

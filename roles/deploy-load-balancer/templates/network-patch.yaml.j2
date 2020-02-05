@@ -1,0 +1,7 @@
+spec:
+  externalIP:
+    policy:
+      allowedCIDRs:
+      - {{ cluster.network.ocp_managed.allowed_cidr }}
+    autoAssignCIDRs:
+      - {{ cluster.network.ocp_managed.autoassigned_cidr}}      
