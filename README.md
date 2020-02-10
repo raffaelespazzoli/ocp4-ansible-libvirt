@@ -44,8 +44,7 @@ The needed commands are the following:
 
 ```shell
 export KUBECONFIG=./install/auth/kubeconfig
-oc get csr
-oc adm certificate approve xxx
+oc get csr -o name | xargs oc adm certificate approve
 ```
 
 ### Access the cluster
