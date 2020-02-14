@@ -20,3 +20,8 @@
 - name: create manifests
   command: openshift-install create manifests --dir {{ workdir.install }}
   become: false
+
+- name: create podman policies machine config
+  template: 
+    src: podman-policy-machineconfig.yaml.j2
+    dest: "{{ workdir.install }}/manifests/podman-policy-machineconfig-machineconfig.yaml"   

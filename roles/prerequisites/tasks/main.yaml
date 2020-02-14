@@ -15,17 +15,36 @@
     path: "{{ workdir.vm_data }}/{{ base_image_name }}"
   register: result 
 
+- name: check if fhcos image exists
+  stat:
+    path: "{{ workdir.vm_data }}/{{ fcos_image_name }}"
+  register: result_fcos  
+
 - name: download rhcos image
   shell: curl -Lo {{ workdir.vm_data }}/{{ base_image_name }}.gz {{ base_image_url }}
   when: result.stat.exists == false  
 
+- name: download fcos image
+  shell: curl -Lo {{ workdir.vm_data }}/{{ fcos_image_name }}.xz {{ fcos_image_url }}
+  when: result_fcos.stat.exists == false 
+
 - name: uncompress rhcos image
   shell: gunzip {{ workdir.vm_data }}/{{ base_image_name }}.gz
   when: result.stat.exists == false  
+
+- name: uncompress fcos image
+  shell: unxz {{ workdir.vm_data }}/{{ fcos_image_name }}.xz
+  when: result_fcos.stat.exists == false  
   
-- name: fix selinux
+- name: fix selinux rhcos
   file:
     path: "{{ workdir.vm_data }}/{{ base_image_name }}"
+    state: file
+    setype: virt_content_t
+
+- name: fix selinux fcos
+  file:
+    path: "{{ workdir.vm_data }}/{{ fcos_image_name }}"
     state: file
     setype: virt_content_t    
 

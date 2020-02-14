@@ -1,0 +1,7 @@
+- name: check if {{ item.image_file_name }} exists
+  stat:
+    path: "{{ item.image_file_name }}"
+  register: result
+- name: create image for bootstrap  
+  command: qemu-img create -f qcow2 -b "{{ workdir.vm_data }}/{{ fcos_image_name}}" "{{ item.image_file_name }}"
+  when: not result.stat.exists

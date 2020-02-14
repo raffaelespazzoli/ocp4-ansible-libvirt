@@ -1,1 +1,12 @@
 {{ install_config | to_nice_yaml }}
+{% if cluster.use_mirror %}
+additionalTrustBundle: | 
+  {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~install_config.baseDomain~'.crt') | indent(2) }}
+imageContentSources:
+- mirrors:
+  - {{ cluster.compute.registry_mirror.name~'.'~install_config.baseDomain }}:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - {{ cluster.compute.registry_mirror.name~'.'~install_config.baseDomain }}:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+{% endif %}

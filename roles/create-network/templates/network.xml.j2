@@ -47,6 +47,7 @@
   <ip address='{{ cluster.network.bridge.default_route }}' netmask='{{ cluster.network.bridge.netmask }}' >
     <dhcp>
       <range start='{{ cluster.network.dhcp.min }}' end='{{ cluster.network.dhcp.max }}' />
+      <host mac='{{ cluster.compute.registry_mirror.mac }}' ip='{{ cluster.compute.registry_mirror.ip }}' name='{{ cluster.compute.registry_mirror.name }}.{{ cluster.compute.vms_domain }}' />
       <host mac='{{ cluster.compute.bootstrap.mac }}' ip='{{ cluster.compute.bootstrap.ip }}' name='{{ cluster.compute.bootstrap.name }}.{{ cluster.compute.vms_domain }}' />
     {% for item in cluster.compute.masters %}
       <host mac='{{ item.mac }}' ip='{{ item.ip }}' name='{{ item.name }}.{{ cluster.compute.vms_domain }}' />

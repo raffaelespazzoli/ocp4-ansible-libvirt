@@ -4,35 +4,40 @@
     state: directory
     setype: virt_content_t
 
-- name: server private key.
-  openssl_privatekey:
-    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
-    mode: "0644"
-  with_items:
-    - '{{ cluster.compute.registry_mirror }}'      
+# - name: server private key.
+#   openssl_privatekey:
+#     path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.key"
+#     mode: "0644"
+#   with_items:
+#     - '{{ cluster.compute.registry_mirror }}'      
 
-- name: Generate an OpenSSL CSR.
-  openssl_csr:
-    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.csr"
-    privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
-    common_name: '{{ item.name }}.{{ cluster.compute.vms_domain }}'
-  with_items:
-    - '{{ cluster.compute.registry_mirror }}'  
+# - name: Generate an OpenSSL CSR.
+#   openssl_csr:
+#     path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.csr"
+#     privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.key"
+#     common_name: '{{ item.name }}.{{ install_config.baseDomain }}'
+#   with_items:
+#     - '{{ cluster.compute.registry_mirror }}'  
 
-- name: Generate a Self Signed OpenSSL certificate.
-  openssl_certificate:
-    path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.crt"
-    privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.key"
-    csr_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ cluster.compute.vms_domain }}.csr"
-    provider: selfsigned  
-  with_items:
-    - '{{ cluster.compute.registry_mirror }}'      
+# - name: Generate a Self Signed OpenSSL certificate.
+#   openssl_certificate:
+#     path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.crt"
+#     privatekey_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.key"
+#     csr_path: "{{ workdir.registry_mirror }}/{{ item.name }}.{{ install_config.baseDomain }}.csr"
+#     provider: selfsigned  
+#   with_items:
+#     - '{{ cluster.compute.registry_mirror }}'   
+    
+- name: create certificate
+  command: /bin/openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ workdir.registry_mirror }}/{{ cluster.compute.registry_mirror.name }}.{{ install_config.baseDomain }}.key -x509 -days 365 -out {{ workdir.registry_mirror }}/{{ cluster.compute.registry_mirror.name }}.{{ install_config.baseDomain }}.crt -subj "/C=SE/ST=Stockholm/L=Stockholm/O=Red Hat/OU=Consulting/CN={{ cluster.compute.registry_mirror.name~'.'~install_config.baseDomain }}/emailAddress=admin@ocp.example.com.com"    
 
+  
 - name: create htpasswd
-  htpasswd:
-    path: "{{ workdir.registry_mirror }}/htpasswd"
-    name: "{{ mirror.username }}"
-    password: "{{ mirror.username }}"
+  command: htpasswd -bc {{ workdir.registry_mirror }}/htpasswd {{ mirror.username }} {{ mirror.password }}
+  # htpasswd:
+  #   path: "{{ workdir.registry_mirror }}/htpasswd"
+  #   name: "{{ mirror.username }}"
+  #   password: "{{ mirror.password }}"
 
 - name: create pull secret 
   template:

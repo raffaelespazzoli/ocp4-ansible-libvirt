@@ -24,4 +24,15 @@
     state: file
     setype: virt_content_t  
     mode: 0644
+
+- name: add podman policy to ignition
+  template:
+    src: podman-policy.yaml.j2
+    dest: "{{ item }}"
+  with_items:
+    - "{{ workdir.install }}/master.ign"
+    - "{{ workdir.install }}/worker.ign"
+    - "{{ workdir.install }}/bootstrap.ign"
+  when: cluster.use_mirror    
+
   

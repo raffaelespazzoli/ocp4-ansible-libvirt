@@ -62,3 +62,16 @@ also you console should be available at:
 ```shell
 ansible-playbook -v -i ./inventory ./playbooks/cleanup.yaml
 ```
+
+https://github.com/aerdei/ocp4-upi-virt-fcos 
+
+
+
+to create a new release
+oc adm -a /home/vrutkovs/src/github.com/vrutkovs/my-ocp-40/pull_secret_upload.json release new --from-release quay.io/vrutkovs/okd-release:4.4 --to-image quay.io/vrutkovs/okd-release:4.4-crio-fix \
+machine-os-content=quay.io/vrutkovs/machine-os-content@sha256:24b820709d928c94b5278beeae3f39709c8cdb3f9cf5fba3dee20a3586a87eec
+
+https://developers.redhat.com/blog/2019/10/29/verifying-signatures-of-red-hat-container-images/
+
+https://github.com/containers/image/blob/master/docs/containers-policy.json.5.md
+https://github.com/containers/image/blob/master/docs/containers-registries.conf.5.md

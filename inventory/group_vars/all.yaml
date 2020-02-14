@@ -2,6 +2,8 @@
 base_image_name: rhcos-43.81.202001031653.0-qemu.x86_64.qcow2
 base_image_url: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/storage/releases/rhcos-4.3/43.81.202001031653.0/x86_64/rhcos-43.81.202001031653.0-qemu.x86_64.qcow2.gz
 
+fcos_image_url: https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/31.20200118.3.0/x86_64/fedora-coreos-31.20200118.3.0-qemu.x86_64.qcow2.xz
+fcos_image_name: fedora-coreos-31.20200118.3.0-qemu.x86_64.qcow2
 #base_image_name: rhcos-410.8.20190604.0-qemu.qcow2
 #base_image_url: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/storage/releases/ootpa/410.8.20190604.0/rhcos-410.8.20190604.0-qemu.qcow2
 
@@ -19,6 +21,7 @@ mirror:
 
 cluster:
   version: 4.3.0
+  use_mirror: true
   compute:
     vms_domain: "{{ install_config.metadata.name }}.{{ install_config.baseDomain }}"
     registry_mirror:

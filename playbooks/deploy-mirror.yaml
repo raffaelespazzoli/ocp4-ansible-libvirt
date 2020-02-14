@@ -4,6 +4,10 @@
 
 - hosts: localhost
   roles:
+  - role: configure-client-dns  
+
+- hosts: localhost
+  roles:
   - role: create-network  
 
 - hosts: localhost

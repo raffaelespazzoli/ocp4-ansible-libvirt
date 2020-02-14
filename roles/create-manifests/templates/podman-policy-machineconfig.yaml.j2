@@ -1,0 +1,84 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 50-podman-policy
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    storage:
+      files:
+{{ lookup('file','../../create-ignition/files/podman-policy.ign') | indent(8) }}      
+    # storage:
+    #   files:
+    #   - path: /etc/containers/policy.json
+    #     mode: 0644
+    #     filesystem: root
+    #     contents:
+    #       inline: |
+    #         {
+    #           "default": [
+    #             {
+    #               "type": "insecureAcceptAnything"
+    #             }
+    #           ],
+    #           "transports": {
+    #             "docker": {
+    #               "registry.access.redhat.com": [
+    #                 {
+    #                   "type": "signedBy",
+    #                   "keyType": "GPGKeys",
+    #                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+    #                 }
+    #               ],
+    #               "registry.redhat.io": [
+    #                 {
+    #                   "type": "signedBy",
+    #                   "keyType": "GPGKeys",
+    #                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+    #                 }
+    #               ],
+    #               "quay.io/openshift-release-dev": [
+    #                 {
+    #                   "type": "signedBy",
+    #                   "keyType": "GPGKeys",
+    #                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+    #                 }
+    #               ]                            
+    #             },
+    #             "docker-daemon": {
+    #               "": [
+    #                 {
+    #                   "type": "insecureAcceptAnything"
+    #                 }
+    #               ]
+    #             }
+    #           }
+    #         }
+    #   - path: /etc/containers/registries.d/quay.io-openshift-release-dev.yaml
+    #     mode: 0644
+    #     filesystem: root
+    #     contents:
+    #       inline: |
+    #         docker:
+    #           quay.io/openshift-release-dev:
+    #             sigstore: https://storage.googleapis.com/openshift-release/official/signatures/openshift/release
+    # # optionally one can also use: https://mirror.openshift.com/pub/openshift-v4/signatures/openshift/release                                    
+    #   - path: /etc/containers/registries.d/registry.access.redhat.com.yaml
+    #     mode: 0644
+    #     filesystem: root
+    #     contents:
+    #       inline: |
+    #         docker:
+    #           registry.access.redhat.com:
+    #             sigstore: https://access.redhat.com/webassets/docker/content/sigstore
+    #   - path: /etc/containers/registries.d/registry.redhat.io.yaml
+    #     mode: 0644
+    #     filesystem: root
+    #     contents:
+    #       inline: |
+    #         docker:
+    #           registry.redhat.io:
+    #             sigstore: https://registry.redhat.io/webassets/docker/content/sigstore  
