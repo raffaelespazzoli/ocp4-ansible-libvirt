@@ -19,7 +19,6 @@
 
 - name: create manifests
   command: openshift-install create manifests --dir {{ workdir.install }}
-  become: false
 
 - name: create podman policies machine config
   template: 
@@ -43,4 +42,4 @@
   with_items:
     - master
     - worker
-  when: cluster.use_tpm
+  when: cluster.use_tang

@@ -1,2 +1,2 @@
 [tang-server]
-mgmt ansible_host=10.70.56.203 ansible_user=root
+mgmt ansible_host=10.70.56.203 ansible_user=root ansible_become=true
