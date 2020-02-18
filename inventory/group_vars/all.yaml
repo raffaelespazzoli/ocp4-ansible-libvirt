@@ -18,10 +18,14 @@ mirror:
   username: raffa
   password: raffa
   pull_secret_file: pull_secret.json
+  sigstore: https://mirror.openshift.com/pub/openshift-v4/signatures/
 
 cluster:
   version: 4.3.0
-  use_mirror: true
+  #obstain this by doing 'openshift-install version'
+  release_image: quay.io/openshift-release-dev/ocp-release@sha256:3a516480dfd68e0f87f702b4d7bdd6f6a0acfdac5cd2e9767b838ceede34d70d
+  use_mirror: false
+  use_tpm: true
   compute:
     vms_domain: "{{ install_config.metadata.name }}.{{ install_config.baseDomain }}"
     registry_mirror:

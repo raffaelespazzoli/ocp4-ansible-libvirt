@@ -1,0 +1,7 @@
+- name: create tpm dir
+  file: 
+    path: "{{ workdir.vm_data }}/tpm/{{ item.name }}"
+    state: directory
+
+- name: initialize tpm device
+  command: swtpm socket -d --tpmstate dir="{{ workdir.vm_data }}/tpm/{{ item.name }}" --tpm2 --ctrl type=unixio,path="{{ workdir.vm_data }}/tpm/{{ item.name }}"/swtpm-sock    

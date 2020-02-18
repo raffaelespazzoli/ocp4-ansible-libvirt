@@ -1,10 +1,3 @@
-#variant: fcos
-#version: 1.0.0
-# ignition:
-#   security:
-#     tls:
-#       certificate_authorities:
-#       - source: "data:,{{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~install_config.baseDomain~'.crt') | urlencode() }}"
 passwd:
   users:
   - name: core
@@ -13,77 +6,13 @@ passwd:
       {{ lookup("file", lookup("env","PUBLIC_SSH_KEY_FILE")) | indent(6) }}
 storage:
   files:
-{{ lookup('file','../../create-ignition/files/podman-policy.ign') | indent(4) }}  
-#   - path: /etc/containers/policy.json
-#     mode: 0644
-#     filesystem: root
-#     contents:
-#       inline: |
-#         {
-#           "default": [
-#             {
-#               "type": "insecureAcceptAnything"
-#             }
-#           ],
-#           "transports": {
-#             "docker": {
-#               "registry.access.redhat.com": [
-#                 {
-#                   "type": "signedBy",
-#                   "keyType": "GPGKeys",
-#                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-#                 }
-#               ],
-#               "registry.redhat.io": [
-#                 {
-#                   "type": "signedBy",
-#                   "keyType": "GPGKeys",
-#                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-#                 }
-#               ],
-#               "quay.io/openshift-release-dev": [
-#                 {
-#                   "type": "signedBy",
-#                   "keyType": "GPGKeys",
-#                   "keyPath": "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-#                 }
-#               ]                            
-#             },
-#             "docker-daemon": {
-#               "": [
-#                 {
-#                   "type": "insecureAcceptAnything"
-#                 }
-#               ]
-#             }
-#           }
-#         }
-#   - path: /etc/containers/registries.d/quay.io-openshift-release-dev.yaml
-#     mode: 0644
-#     filesystem: root
-#     contents:
-#       inline: |
-#         docker:
-#           quay.io/openshift-release-dev:
-#             sigstore: https://storage.googleapis.com/openshift-release/official/signatures/openshift/release
-# # optionally one can also use: https://mirror.openshift.com/pub/openshift-v4/signatures/openshift/release            
-                    
-#   - path: /etc/containers/registries.d/registry.access.redhat.com.yaml
-#     mode: 0644
-#     filesystem: root
-#     contents:
-#       inline: |
-#         docker:
-#           registry.access.redhat.com:
-#             sigstore: https://access.redhat.com/webassets/docker/content/sigstore
-#   - path: /etc/containers/registries.d/registry.redhat.io.yaml
-#     mode: 0644
-#     filesystem: root
-#     contents:
-#       inline: |
-#         docker:
-#           registry.redhat.io:
-#             sigstore: https://registry.redhat.io/webassets/docker/content/sigstore                         
+  {{ lookup('file','../../create-ignition/files/podman-policy.ign') | indent(2) }}
+  - path: /etc/clone-signatures.sh
+    mode: 0744
+    filesystem: root
+    contents:
+      inline: |
+        {{ lookup('file','clone-signatures.sh') | indent(8) }}                        
   - path: /opt/registry/auth/pull_secret.json
     mode: 0644
     filesystem: root
@@ -108,12 +37,83 @@ storage:
     contents:
       inline: |
         {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~install_config.baseDomain~'.key') | indent(8) }} 
-#   - path: /etc/pki/ca-trust/source/anchors/domain.crt
-#     mode: 0644
-# #    filesystem: root
-#     contents:
-#       inline: |
-{#         {{ lookup('file',workdir.registry_mirror~'/'~cluster.compute.registry_mirror.name~'.'~install_config.baseDomain~'.crt') | indent(8) }} #}
+  - path: /opt/services/httpd/conf/httpd.conf
+    overwrite: true
+    user:
+      name: core
+    contents:
+      inline: |
+        ServerName "{{ cluster.compute.registry_mirror.name~'.'~install_config.baseDomain }}"
+        ServerRoot "/etc/httpd"
+        Listen 8080
+        Include conf.modules.d/*.conf
+        User apache
+        Group apache
+        ServerAdmin root@localhost
+        <Directory />
+            AllowOverride none
+            Require all denied
+        </Directory>
+        DocumentRoot "/var/www/html"
+        <Directory "/var/www">
+            AllowOverride None
+            Require all granted
+        </Directory>
+        <Directory "/var/www/html">
+            Options Indexes FollowSymLinks
+            AllowOverride None
+            Require all granted
+        </Directory>
+        <IfModule dir_module>
+            DirectoryIndex index.html
+        </IfModule>
+        <Files ".ht*">
+            Require all denied
+        </Files>
+        ErrorLog "logs/error_log"
+        LogLevel warn
+        <IfModule log_config_module>
+            LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+            LogFormat "%h %l %u %t \"%r\" %>s %b" common
+            <IfModule logio_module>
+              LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+            </IfModule>
+            CustomLog "logs/access_log" combined
+        </IfModule>
+        <IfModule alias_module>
+            ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+        </IfModule>
+        <Directory "/var/www/cgi-bin">
+            AllowOverride None
+            Options None
+            Require all granted
+        </Directory>
+        <IfModule mime_module>
+            TypesConfig /etc/mime.types
+            AddType application/x-compress .Z
+            AddType application/x-gzip .gz .tgz
+            AddType text/html .shtml
+            AddOutputFilter INCLUDES .shtml
+        </IfModule>
+        AddDefaultCharset UTF-8
+        <IfModule mime_magic_module>
+            MIMEMagicFile conf/magic
+        </IfModule>
+        EnableSendfile on
+        IncludeOptional conf.d/*.conf
+    mode: 0644
+    filesystem: root
+  - path: /opt/services/httpd/www/html/index.html
+    overwrite: true
+    user:
+      name: core
+    group:
+      name: core
+    contents:
+      inline: |
+        Hello from FCOS!
+    mode: 0644
+    filesystem: root    
 systemd:
   units:
     - name: registry-mirror.service
@@ -164,5 +164,38 @@ systemd:
         #ExecStart=/bin/podman run --name mirror-job -v /opt/registry/auth:/opt/registry/auth:z quay.io/openshift/origin-cli /bin/oc adm -a ${LOCAL_SECRET_JSON} release mirror --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}
         ExecStart=/bin/oc adm -a ${LOCAL_SECRET_JSON} release mirror --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}       
         
+        [Install]
+        WantedBy=multi-user.target 
+    - name: httpd-container.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=HTTPD-container
+        After=network-online.target
+        Wants=network-online.target
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=-/bin/podman kill httpd-service
+        ExecStartPre=-/bin/podman rm httpd-service
+        ExecStartPre=/bin/podman pull registry.redhat.io/rhel8/httpd-24
+        ExecStartPre=/bin/chcon -R -t httpd_sys_content_t /opt/services/httpd
+        ExecStart=/bin/podman run --name httpd-service -v /opt/services/httpd/conf:/etc/httpd/conf:z -v /opt/services/httpd/www/html:/var/www/html/:z --net host -p registry.redhat.io/rhel8/httpd-24 /usr/sbin/httpd -DFOREGROUND -DNO_DETACH
+        [Install]
+        WantedBy=multi-user.target
+    - name: signature-mirror-job.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=signature-mirror-job
+        After=network-online.target
+        Wants=network-online.target
+        [Service]
+        RemainAfterExit=true
+        TimeoutStartSec=0
+        Restart=on-failure
+        Environment=release_image={{ cluster.release_image }}
+        Environment=sigstore={{ mirror.sigstore }}
+        Environment=sigdir=/opt/services/httpd/www/html
+        ExecStart=/etc/clone-signatures.sh
         [Install]
         WantedBy=multi-user.target        

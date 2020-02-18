@@ -24,4 +24,14 @@
 - name: create podman policies machine config
   template: 
     src: podman-policy-machineconfig.yaml.j2
-    dest: "{{ workdir.install }}/manifests/podman-policy-machineconfig-machineconfig.yaml"   
+    dest: "{{ workdir.install }}/manifests/podman-policy-machineconfig-machineconfig.yaml"
+  when: cluster.use_mirror
+
+- name: create tpm clevis file
+  template:
+    src: tpm-{{item}}.yaml
+    dest: "{{ workdir.install }}/manifests/tpm-{{item}}.yaml"
+  with_items:
+    - master
+    - worker
+  when: cluster.use_tpm   

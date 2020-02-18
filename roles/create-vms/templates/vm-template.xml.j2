@@ -21,6 +21,12 @@
     <suspend-to-disk enabled="no"/>
   </pm>  
   <devices>
+  {% if cluster.use_tpm %}}
+    <tpm model='tpm-tis'>
+      <backend type='emulator' version='2.0'>
+      </backend>
+    </tpm>
+  {% endif %}}    
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2"/>

@@ -1,6 +1,11 @@
 - name: prepare image for workers
   include: ../create-vms/tasks/prepare-image.yaml   
-  with_items: '{{ cluster.compute.workers }}' 
+  with_items: '{{ cluster.compute.workers }}'
+
+# - name: create tpm-devices
+#   include: ../create-vms/tasks/create-tpm-device.yaml
+#   with_items: '{{ cluster.compute.workers }}'
+#   when: cluster.use_tpm  
 
 - name: create workers
   virt:

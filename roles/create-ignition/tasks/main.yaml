@@ -27,7 +27,7 @@
 
 - name: add podman policy to ignition
   template:
-    src: podman-policy.yaml.j2
+    src: podman-policy.ign.j2
     dest: "{{ item }}"
   with_items:
     - "{{ workdir.install }}/master.ign"

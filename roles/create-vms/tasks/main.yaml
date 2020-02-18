@@ -14,6 +14,11 @@
   with_items: 
   - '{{ cluster.compute.bootstrap }}'
 
+# - name: create tpm-devices
+#   include: create-tpm-device.yaml
+#   with_items: '{{ cluster.compute.masters }}'
+#   when: cluster.use_tpm
+
 - name: create masters
   virt:
     command: define

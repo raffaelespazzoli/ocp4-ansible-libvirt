@@ -1,5 +1,0 @@
-{% set ignition = lookup('file',item) | from_json %}
-{% set policy = lookup('file','podman-policy.ign') | from_yaml %}
-{% set policyignition={'storage':{'files': {}}} %}
-{% set _ = policyignition['storage']['files'].update(policy) %}
-{#{{ ignition | combine(policyignition) | to_pretty_json }}#}

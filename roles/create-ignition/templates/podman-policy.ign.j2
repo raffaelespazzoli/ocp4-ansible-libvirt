@@ -1,0 +1,10 @@
+{% set ignition = lookup('file',item) | from_json %}
+{% set policy = lookup('file','podman-policy.ign') | from_yaml %}
+{% set combined_storage_files = ignition['storage']['files'] | default([]) | union(policy|list) %}
+{#{ combined_storage_files | to_nice_json }#}
+{% set ignition_combined_storage_files = {'storage':{'files': combined_storage_files}} %}
+{{ ignition | combine(ignition_combined_storage_files, recursive=True) | to_nice_json }}
+{#{ ignition | combine(ign_files, recursive=True) | to_nice_json}#}
+{#% set ign_files = ignition['storage']['files'] | default([]) | list | union(policy) %#}
+{#% set _ = ignition['storage']['files'].update(ign_files) %#}
+{#{ ignition | to_nice_json }#}
