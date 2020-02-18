@@ -2,6 +2,9 @@
 base_image_name: rhcos-43.81.202001031653.0-qemu.x86_64.qcow2
 base_image_url: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/storage/releases/rhcos-4.3/43.81.202001031653.0/x86_64/rhcos-43.81.202001031653.0-qemu.x86_64.qcow2.gz
 
+#base_image_url: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/storage/releases/rhcos-4.4/44.81.202002140030-0/x86_64/rhcos-44.81.202002140030-0-qemu.x86_64.qcow2.gz
+#base_image_name: rhcos-44.81.202002140030-0-qemu.x86_64.qcow2
+
 fcos_image_url: https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/31.20200118.3.0/x86_64/fedora-coreos-31.20200118.3.0-qemu.x86_64.qcow2.xz
 fcos_image_name: fedora-coreos-31.20200118.3.0-qemu.x86_64.qcow2
 #base_image_name: rhcos-410.8.20190604.0-qemu.qcow2
@@ -19,13 +22,15 @@ mirror:
   password: raffa
   pull_secret_file: pull_secret.json
   sigstore: https://mirror.openshift.com/pub/openshift-v4/signatures/
+  tang_secret: PLjNyRdGw03zlRoGjQYMahSZGu9
 
 cluster:
   version: 4.3.0
   #obstain this by doing 'openshift-install version'
   release_image: quay.io/openshift-release-dev/ocp-release@sha256:3a516480dfd68e0f87f702b4d7bdd6f6a0acfdac5cd2e9767b838ceede34d70d
   use_mirror: false
-  use_tpm: true
+  use_tpm: false
+  use_tang: false
   compute:
     vms_domain: "{{ install_config.metadata.name }}.{{ install_config.baseDomain }}"
     registry_mirror:
@@ -50,25 +55,25 @@ cluster:
     - name: master-1
       ip: '192.168.131.12'
       mac: '52:54:00:2c:01:12'      
-      #memory: 8192
+      #memory: 10240
       memory: 16384
-      cpus: 4
+      cpus: 6
       image_file_name: "{{ workdir.vm_data }}/master-1.qcow2"
       ign_file_name: "{{ workdir.install }}/master.ign"
     # - name: master-2
     #   ip: '192.168.131.13'
     #   mac: '52:54:00:2c:01:13'      
-    #   memory: 8192
+    #   memory: 10240
     #   #memory: 16384
-    #   cpus: 4
+    #   cpus: 6
     #   image_file_name: "{{ workdir.vm_data }}/master-2.qcow2"
     #   ign_file_name: "{{ workdir.install }}/master.ign"
     # - name: master-3
     #   ip: '192.168.131.14'
     #   mac: '52:54:00:2c:01:14'      
-    #   memory: 8192
+    #   memory: 10240
     #   #memory: 16384
-    #   cpus: 4
+    #   cpus: 6
     #   image_file_name: "{{ workdir.vm_data }}/master-3.qcow2"
     #   ign_file_name: "{{ workdir.install }}/master.ign"           
     workers:

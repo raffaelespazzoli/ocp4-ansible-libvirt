@@ -34,4 +34,13 @@
   with_items:
     - master
     - worker
-  when: cluster.use_tpm   
+  when: cluster.use_tpm
+
+- name: create tang clevis file
+  template:
+    src: tang-{{item}}.yaml.j2
+    dest: "{{ workdir.install }}/manifests/tang-{{item}}.yaml"
+  with_items:
+    - master
+    - worker
+  when: cluster.use_tpm
