@@ -1,0 +1,2 @@
+---
+tang_url: "http://{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:7500"
