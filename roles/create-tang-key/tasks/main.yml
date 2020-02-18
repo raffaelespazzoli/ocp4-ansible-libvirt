@@ -1,0 +1,28 @@
+---
+- name: Install expect package
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3-pexpect
+    - tang
+    - clevis
+
+- name: Create clevis script
+  copy:
+    dest: /tmp/clevis.sh
+    content: |
+      echo $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1) | clevis-encrypt-tang '{"url":"{{ tang_url }}"}'
+
+- name: Run clevis-script
+  expect:
+    timeout: 5
+    command: bash /tmp/clevis.sh
+    responses:
+      (.*)ynYN(.*): y
+  register: clevis_output
+  failed_when: "clevis_output.rc == 1"
+
+- name: Store the output in a key
+  set_fact:
+    secret_key: "{{ clevis_output.stdout.split() | last }}"
