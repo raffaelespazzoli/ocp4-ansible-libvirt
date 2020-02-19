@@ -11,11 +11,9 @@
   - role: create-network  
 
 - hosts: tang-server
-  tasks:
-  - include_role:
-      name: create-tang-key
-    when: cluster.use_tang  
-   
+  roles:
+    - create-tang-key
+
 - hosts: localhost
   roles:
   - role: create-manifests

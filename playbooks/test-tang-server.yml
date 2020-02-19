@@ -1,0 +1,20 @@
+---
+- hosts: tang-server
+  roles:
+    - create-tang-key
+
+- hosts: localhost
+  tasks:
+    - name: Create key
+      include_role:
+        name: create-tang-key
+        tasks_from: create_key
+      with_items:
+        - master: { name: master }
+#        - "{{ cluster.compute.masters }}"
+#        - "{{ cluster.compute.workers }}"
+
+- hosts: localhost
+  tasks:
+    - debug:
+        msg: "{{ tang_keys }}"
