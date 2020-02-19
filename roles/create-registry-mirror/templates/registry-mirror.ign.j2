@@ -177,9 +177,9 @@ systemd:
         TimeoutStartSec=0
         ExecStartPre=-/bin/podman kill httpd-service
         ExecStartPre=-/bin/podman rm httpd-service
-        ExecStartPre=/bin/podman pull registry.redhat.io/rhel8/httpd-24
+        ExecStartPre=/bin/podman pull --authfile /opt/registry/auth/pull_secret.json registry.redhat.io/rhel8/httpd-24
         ExecStartPre=/bin/chcon -R -t httpd_sys_content_t /opt/services/httpd
-        ExecStart=/bin/podman run --name httpd-service -v /opt/services/httpd/conf:/etc/httpd/conf:z -v /opt/services/httpd/www/html:/var/www/html/:z --net host -p registry.redhat.io/rhel8/httpd-24 /usr/sbin/httpd -DFOREGROUND -DNO_DETACH
+        ExecStart=/bin/podman run --authfile /opt/registry/auth/pull_secret.json --name httpd-service -v /opt/services/httpd/conf:/etc/httpd/conf:z -v /opt/services/httpd/www/html:/var/www/html/:z --net host registry.redhat.io/rhel8/httpd-24 /usr/sbin/httpd -DFOREGROUND -DNO_DETACH
         [Install]
         WantedBy=multi-user.target
     - name: signature-mirror-job.service

@@ -15,9 +15,28 @@
         - tang
         - clevis
 
-    - name: Create clevis script
-      delegate_to: "{{ groups['tang-server'][0] }}"
-      copy:
-        dest: /tmp/clevis.sh
-        content: |
-          echo $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1) | clevis-encrypt-tang '{"url":"{{ tang_url }}"}'
+- name: Create clevis script
+  copy:
+    dest: /tmp/clevis.sh
+    content: |
+      echo $(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1) | clevis-encrypt-tang '{"url":"{{ tang_url }}"}'
+
+- name: Run the clevis-script.sh through expect
+  shell: |
+    set timeout 5
+    spawn bash /tmp/clevis.sh
+    expect -re "(.*)ynYN(.*)"
+    send "y\n"
+    expect eof
+    exit 0
+  args:
+    executable: /usr/bin/expect
+  register: clevis_output
+
+- name: Store the output in a key
+  set_fact:
+    secret_key: "{{ clevis_output.stdout.split() | last }}"
+
+
+- name: Store
+  msg: hostvars['all'].cluster.compute.masters['item'].secret_key.update(clevis_output.stdout.split() | last)    

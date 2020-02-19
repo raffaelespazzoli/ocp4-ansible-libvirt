@@ -28,9 +28,9 @@ cluster:
   version: 4.3.0
   #obstain this by doing 'openshift-install version'
   release_image: quay.io/openshift-release-dev/ocp-release@sha256:3a516480dfd68e0f87f702b4d7bdd6f6a0acfdac5cd2e9767b838ceede34d70d
-  use_mirror: false
+  use_mirror: true
   use_tpm: false
-  use_tang: true
+  use_tang: false
   compute:
     vms_domain: "{{ install_config.metadata.name }}.{{ install_config.baseDomain }}"
     registry_mirror:
