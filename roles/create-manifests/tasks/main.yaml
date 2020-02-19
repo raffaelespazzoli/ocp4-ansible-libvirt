@@ -35,11 +35,23 @@
     - worker
   when: cluster.use_tpm
 
+- name: Create tang key
+  when:
+    - cluster.use_tang is defined and cluster.use_tang | bool
+    - groups['tang-server'] is defined
+  include_role:
+    name: create-tang-key
+    tasks_from: create_key
+  with_items:
+    - master
+    - worker
+#    - "{{ cluster.compute.masters }}"
+#    - "{{ cluster.compute.workers }}"
+
 - name: create tang clevis file
   template:
     src: tang-{{item}}.yaml.j2
     dest: "{{ workdir.install }}/manifests/tang-{{item}}.yaml"
   with_items:
-    - master
-    - worker
+    - tang_keys
   when: cluster.use_tang
