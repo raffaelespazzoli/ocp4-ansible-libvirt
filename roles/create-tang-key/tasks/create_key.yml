@@ -14,7 +14,7 @@
 
 - name: Set a temporary fact with the key
   set_fact:
-    secret_key: "{{ clevis_output.stdout.split() | last }}"
+    secret_key: "{{ clevis_output.stdout_lines[3] }}"
 
 - name: build items list
   set_fact:
