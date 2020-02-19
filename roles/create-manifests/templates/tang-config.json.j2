@@ -1,4 +1,4 @@
 {
- "url": "{{ cluster.compute.registry_mirror.name~'.'~install_config.baseDomain }}",
- "thp": "{{ item.key }}"
+ "url": "http://{{ hostvars[groups['tang-server'][0]]['ansible_default_ipv4']['address'] }}:7500",
+ "thp": "{{ tang_keys[0 if item=='master' else 1][item].key }}"
 }

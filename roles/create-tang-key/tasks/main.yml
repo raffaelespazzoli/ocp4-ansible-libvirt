@@ -35,8 +35,4 @@
 
 - name: Store the output in a key
   set_fact:
-    secret_key: "{{ clevis_output.stdout.split() | last }}"
-
-
-- name: Store
-  msg: hostvars['all'].cluster.compute.masters['item'].secret_key.update(clevis_output.stdout.split() | last)    
+    secret_key: "{{ clevis_output.stdout.split() | last }}"    
