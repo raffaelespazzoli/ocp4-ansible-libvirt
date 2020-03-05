@@ -40,9 +40,16 @@
   with_items: '{{ cluster.compute.masters }}' 
   become: true
   
-- name: Waiting since {{ ansible_date_time.time }} for the bootstrap to complete. On a laptop it can take much longer, we are going to try for 4 times.
-  command: |
-    openshift-install wait-for bootstrap-complete --dir "{{ workdir.install }}" 
+- name: |
+    Waiting since {{ ansible_date_time.time }} for the bootstrap to complete. On a laptop it can take much longer, we are going to try for 4 times.
+    Suggestion: open another console and "watch oc --kubeconfig=./install/auth/kubeconfig get clusteroperators"
+  command:
+    argv:
+    - "{{ openshift_install_executable }}" 
+    - wait-for 
+    - bootstrap-complete 
+    - --dir 
+    - "{{ workdir.install }}" 
   register: task_result
   until: task_result.rc == 0
   retries: 4

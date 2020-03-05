@@ -85,19 +85,19 @@
 
 - name: deploy keepalived operator
   block:
-  - command: helm repo add keepalived-operator https://redhat-cop.github.io/keepalived-operator
+  - command: helm repo add egressip-ipam-operator https://redhat-cop.github.io/egressip-ipam-operator
 
   - command: helm repo update
 
-  - shell: helm search repo keepalived-operator/keepalived-operator | grep keepalived-operator/keepalived-operator | awk '{print $2}'
+  - shell: helm search repo egressip-ipam-operator/egressip-ipam-operator | grep egressip-ipam-operator/egressip-ipam-operator | awk '{print $2}'
     register: result
 
-  - command: helm fetch keepalived-operator/keepalived-operator --version {{ result.stdout }}  
+  - command: helm fetch egressip-ipam-operator/egressip-ipam-operator --version {{ result.stdout }}  
 
-  - shell: helm template keepalived-operator-{{ result.stdout }}.tgz --namespace keepalived-operator | {{ oc_executable }} apply -f - -n keepalived-operator
+  - shell: helm template egressip-ipam-operator-{{ result.stdout }}.tgz --namespace egressip-ipam-operator | {{ oc_executable }} apply -f - -n egressip-ipam-operator
 
   - file: 
-      path: "keepalived-operator-{{ result.stdout }}.tgz"
+      path: "egressip-ipam-operator-{{ result.stdout }}.tgz"
       state: absent
 
 - name: patch ocp network
@@ -105,8 +105,8 @@
 
 - name: create operator group
   block: 
-  - command: "{{ oc_executable }} adm policy add-scc-to-user privileged -z default -n keepalived-operator"  
-  - command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-group.yaml -n keepalived-operator"
+  - command: "{{ oc_executable }} adm policy add-scc-to-user privileged -z default -n egressip-ipam-operator"  
+  - command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-group.yaml -n egressip-ipam-operator"
 
 - name: create router service (openshift-ingress/router-default)
   shell: |
@@ -114,9 +114,16 @@
     {{ lookup('template','service.yaml.j2') }}
     EOF
 
-- name: Waiting since {{ ansible_date_time.time }} for the install to complete. On a laptop it can take much longer, we are going to try for 4 times.
-  command: |
-    openshift-install wait-for install-complete --dir "{{ workdir.install }}" 
+- name: |
+    Waiting since {{ ansible_date_time.time }} for the install to complete. On a laptop it can take much longer, we are going to try for 4 times.
+    console will be available at: https://https://console-openshift-console.apps.{{ cluster.compute.vms_domain }}
+  command:
+    argv:
+      - "{{ openshift_install_executable }}"
+      - wait-for 
+      - install-complete 
+      - --dir 
+      - "{{ workdir.install }}" 
   register: task_result
   until: task_result.rc == 0
   retries: 4

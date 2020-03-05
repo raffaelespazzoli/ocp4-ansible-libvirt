@@ -15,7 +15,7 @@
     path: "{{ workdir.vm_data }}/{{ base_image_name }}"
   register: result 
 
-- name: check if fhcos image exists
+- name: check if fcos image exists
   stat:
     path: "{{ workdir.vm_data }}/{{ fcos_image_name }}"
   register: result_fcos  
@@ -50,6 +50,32 @@
 
 - name: download installer exec
   meta: noop
+
+- name: check if installer exists
+  stat:
+    path: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}/openshift-install"
+  register: result_installer   
+
+- name: download installer exec
+  get_url:
+    url: "{{ binaries_location }}/{{ cluster.version }}/openshift-install-linux-{{ cluster.version }}.tar.gz "
+    dest: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}.tar.gz"
+  when: result_installer.stat.exists == false     
+
+- name: create dir for installer
+  file:
+    path: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}"
+    state: directory
+
+- name: uncompress installer exec image
+  unarchive:
+    src: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}.tar.gz"
+    dest: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}"
+  when: result_installer.stat.exists == false  
+  
+- name: set openshift-install executable
+  set_fact:
+    openshift_install_executable: "{{ workdir.vm_data }}/openshift-install-linux-{{ cluster.version }}/openshift-install"
 
 - name: set oc executable
   set_fact:

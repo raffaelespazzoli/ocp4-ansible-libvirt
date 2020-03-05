@@ -1,7 +1,13 @@
    
 
 - name: create ignition
-  command: openshift-install create ignition-configs --dir {{ workdir.install }}
+  command: 
+    argv:
+      - "{{ openshift_install_executable }}" 
+      - create 
+      - ignition-configs 
+      - --dir 
+      - "{{ workdir.install }}"
 
 - name: adjust permissions
   file: 

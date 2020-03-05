@@ -11,7 +11,7 @@ spec:
     storage:
       files:
       - contents:
-          source: data:text/plain;base64,e30K
+          #source: data:text/plain;base64,e30K
           source: data:text/plain;base64,{{ lookup('template','tang-config.json.j2',convert_data=False) | b64encode }}
         filesystem: root
         mode: 420
