@@ -19,8 +19,8 @@ workdir:
   registry_mirror: "/home/{{ homedir_user }}/git/ocp4-ansible-libvirt/registry-mirror"
 
 mirror:
-  username: {{ homedir_user }}
-  password: {{ homedir_user }}
+  username: "{{ homedir_user }}"
+  password: "{{ homedir_user }}"
   pull_secret_file: pull_secret.json
   sigstore: https://mirror.openshift.com/pub/openshift-v4/signatures/
   tang_secret: PLjNyRdGw03zlRoGjQYMahSZGu9
