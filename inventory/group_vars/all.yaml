@@ -26,7 +26,7 @@ mirror:
   tang_secret: PLjNyRdGw03zlRoGjQYMahSZGu9
 
 cluster:
-  version: 4.3.2
+  version: 4.3.3
   #obstain this by doing 'openshift-install version'
   release_image: quay.io/openshift-release-dev/ocp-release@sha256:3a516480dfd68e0f87f702b4d7bdd6f6a0acfdac5cd2e9767b838ceede34d70d
   use_mirror: false
