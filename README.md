@@ -14,10 +14,19 @@ A major difference from other bare metal approaches is that this approach does n
 
 ### Prepare environment variables
 
+Put the following in an `.env` file:
+
 ```shell
 export BECOME_PASSWORD=<your sudo password>
 export PUBLIC_SSH_KEY_FILE=<your public ssh key>
 export PULL_SECRET_FILE=<your pull secret>
+```
+The pull secret file from https://cloud.redhat.com/openshift/install follows the same format as a docker config file, so you can put your pull secrets in that file.
+
+Then run the following to set your environment variables before running the playbook:
+
+```sh
+$ source .env
 ```
 
 ### Install ansible requirements

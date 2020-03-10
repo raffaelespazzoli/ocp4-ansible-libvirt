@@ -25,5 +25,5 @@
       at this point you need to approve the csr, on a different terminal check if all the csr are present:
       oc --kubeconfig={{ workdir.install }}/auth/kubeconfig get csr
       when all the csr are present, run this command:       
-      oc --kubeconfig={{ workdir.install }}/auth/kubeconfig adm certificate approve $(oc --kubeconfig={{ workdir.install }}/auth/kubeconfig get csr -o json | jq '[ .items[] | {name: .metadata.name, node: .spec.username|split(\":\")[-1], status: .status }] | select(.[].status == "").name')  
+      oc --kubeconfig={{ workdir.install }}/auth/kubeconfig get csr -o name | xargs oc --kubeconfig={{ workdir.install }}/auth/kubeconfig adm certificate approve 
     minutes: 10   

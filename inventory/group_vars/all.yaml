@@ -1,3 +1,4 @@
+homedir_user: "{{ lookup('env','USER') }}"
 
 base_image_name: rhcos-43.81.202001031653.0-qemu.x86_64.qcow2
 base_image_url: https://releases-rhcos-art.cloud.privileged.psi.redhat.com/storage/releases/rhcos-4.3/43.81.202001031653.0/x86_64/rhcos-43.81.202001031653.0-qemu.x86_64.qcow2.gz
@@ -13,13 +14,13 @@ fcos_image_name: fedora-coreos-31.20200118.3.0-qemu.x86_64.qcow2
 binaries_location: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/
 
 workdir:
-  vm_data: /home/rspazzol/git/ocp4-ansible-libvirt/vms
-  install: /home/rspazzol/git/ocp4-ansible-libvirt/install
-  registry_mirror: /home/rspazzol/git/ocp4-ansible-libvirt/registry-mirror
+  vm_data: "/home/{{ homedir_user }}/git/ocp4-ansible-libvirt/vms"
+  install: "/home/{{ homedir_user }}/git/ocp4-ansible-libvirt/install"
+  registry_mirror: "/home/{{ homedir_user }}/git/ocp4-ansible-libvirt/registry-mirror"
 
 mirror:
-  username: raffa
-  password: raffa
+  username: "raffa"
+  password: "raffa"
   pull_secret_file: pull_secret.json
   sigstore: https://mirror.openshift.com/pub/openshift-v4/signatures/
   tang_secret: PLjNyRdGw03zlRoGjQYMahSZGu9

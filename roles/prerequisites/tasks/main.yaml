@@ -14,23 +14,31 @@
   stat:
     path: "{{ workdir.vm_data }}/{{ base_image_name }}"
   register: result 
+  tags:
+    - download_images
 
 - name: check if fcos image exists
   stat:
     path: "{{ workdir.vm_data }}/{{ fcos_image_name }}"
   register: result_fcos  
+  tags:
+    - download_images
 
 - name: download rhcos image
   shell: curl -Lo {{ workdir.vm_data }}/{{ base_image_name }}.gz {{ base_image_url }}
-  when: result.stat.exists == false  
+  when: result.stat.exists == false
+  tags:
+    - download_images 
 
 - name: download fcos image
   shell: curl -Lo {{ workdir.vm_data }}/{{ fcos_image_name }}.xz {{ fcos_image_url }}
   when: result_fcos.stat.exists == false 
+  tags:
+    - download_images
 
 - name: uncompress rhcos image
   shell: gunzip {{ workdir.vm_data }}/{{ base_image_name }}.gz
-  when: result.stat.exists == false  
+  when: result.stat.exists == false
 
 - name: uncompress fcos image
   shell: unxz {{ workdir.vm_data }}/{{ fcos_image_name }}.xz
