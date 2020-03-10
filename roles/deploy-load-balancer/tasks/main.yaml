@@ -85,19 +85,19 @@
 
 - name: deploy keepalived operator
   block:
-  - command: helm repo add egressip-ipam-operator https://redhat-cop.github.io/egressip-ipam-operator
+  - command: helm repo add keepalived-operator https://redhat-cop.github.io/keepalived-operator
 
   - command: helm repo update
 
-  - shell: helm search repo egressip-ipam-operator/egressip-ipam-operator | grep egressip-ipam-operator/egressip-ipam-operator | awk '{print $2}'
+  - shell: helm search repo keepalived-operator/keepalived-operator | grep keepalived-operator/keepalived-operator | awk '{print $2}'
     register: result
 
-  - command: helm fetch egressip-ipam-operator/egressip-ipam-operator --version {{ result.stdout }}  
+  - command: helm fetch keepalived-operator/keepalived-operator --version {{ result.stdout }}  
 
-  - shell: helm template egressip-ipam-operator-{{ result.stdout }}.tgz --namespace egressip-ipam-operator | {{ oc_executable }} apply -f - -n egressip-ipam-operator
+  - shell: helm template keepalived-operator-{{ result.stdout }}.tgz --namespace keepalived-operator | {{ oc_executable }} apply -f - -n keepalived-operator
 
   - file: 
-      path: "egressip-ipam-operator-{{ result.stdout }}.tgz"
+      path: "keepalived-operator-{{ result.stdout }}.tgz"
       state: absent
 
 - name: patch ocp network
@@ -105,8 +105,8 @@
 
 - name: create operator group
   block: 
-  - command: "{{ oc_executable }} adm policy add-scc-to-user privileged -z default -n egressip-ipam-operator"  
-  - command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-group.yaml -n egressip-ipam-operator"
+  - command: "{{ oc_executable }} adm policy add-scc-to-user privileged -z default -n keepalived-operator"  
+  - command: "{{ oc_executable }} apply -f {{ role_path }}/files/keepalived-group.yaml -n keepalived-operator"
 
 - name: create router service (openshift-ingress/router-default)
   shell: |
